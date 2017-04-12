@@ -1,8 +1,6 @@
-package com.hackerrank.trees;
+package com.hackerrank.trees.trie;
 
 import java.util.Collection;
-
-import static com.hackerrank.trees.Alphabet.LOWERCASE;
 
 /**
  * Created by kprajith on 4/9/2017.
@@ -11,7 +9,7 @@ public class LowercaseTrieVocabulary  {
 
     private boolean isWord = false;
     // The number of possible children is the number of letters in the alphabet
-    private LowercaseTrieVocabulary[] children = new LowercaseTrieVocabulary[LOWERCASE.size()];
+    private LowercaseTrieVocabulary[] children = new LowercaseTrieVocabulary[Alphabet.LOWERCASE.size()];
     // This is the number of actual children
     private int numChildren = 0;
 
@@ -26,7 +24,7 @@ public class LowercaseTrieVocabulary  {
 
     public boolean add(String s) {
         char first = s.charAt(0);
-        int index = LOWERCASE.getIndex(first);
+        int index = Alphabet.LOWERCASE.getIndex(first);
         if (index < 0) {
             System.out.println("uf");
         }
@@ -77,7 +75,7 @@ public class LowercaseTrieVocabulary  {
     public LowercaseTrieVocabulary getNode(String s) {
         LowercaseTrieVocabulary node = this;
         for (int i = 0; i < s.length(); i++) {
-            int index = LOWERCASE.getIndex(s.charAt(i));
+            int index = Alphabet.LOWERCASE.getIndex(s.charAt(i));
             LowercaseTrieVocabulary child = node.children[index];
             if (child == null) {
                 // There is no such word
