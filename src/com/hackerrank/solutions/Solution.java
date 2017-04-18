@@ -82,57 +82,44 @@ public class Solution {
         return nodes[index];
 
     }
-    static class FastReader
-    {
+
+    static class FastReader {
         BufferedReader br;
         StringTokenizer st;
 
-        public FastReader()
-        {
+        public FastReader() {
             br = new BufferedReader(new
                     InputStreamReader(System.in));
         }
 
-        String next()
-        {
-            while (st == null || !st.hasMoreElements())
-            {
-                try
-                {
+        String next() {
+            while (st == null || !st.hasMoreElements()) {
+                try {
                     st = new StringTokenizer(br.readLine());
-                }
-                catch (IOException e)
-                {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
             return st.nextToken();
         }
 
-        int nextInt()
-        {
+        int nextInt() {
             return Integer.parseInt(next());
         }
 
-        long nextLong()
-        {
+        long nextLong() {
             return Long.parseLong(next());
         }
 
-        double nextDouble()
-        {
+        double nextDouble() {
             return Double.parseDouble(next());
         }
 
-        String nextLine()
-        {
+        String nextLine() {
             String str = "";
-            try
-            {
+            try {
                 str = br.readLine();
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
             return str;
@@ -146,7 +133,7 @@ public class Solution {
     public static void main(String[] args) {
 
         FastReader in = new FastReader();
-        int q = in.nextInt();
+        int q = 1;
         for (int j = 0; j < q; j++) {
             int n = in.nextInt();
             nodes = new Node[n + 1];
@@ -162,18 +149,14 @@ public class Solution {
                 putEdge(dest.node, src.node, cost);
             }
             int s = in.nextInt();
+            int t = in.nextInt();
             Dijkstra d = new Dijkstra(n, e);
             d.shortestPath(nodes, s);
-            for (int i = 1; i < d.distances.length; i++) {
-                if (i != s) {
-                    if (d.distances[i] == Integer.MAX_VALUE) {
-                        System.out.print("-1 ");
-                    } else {
-                        System.out.print(d.distances[i] + " ");
-                    }
-                }
+            if (d.distances[t] == Integer.MAX_VALUE) {
+                System.out.print("-1 ");
+            } else {
+                System.out.println(d.distances[t]);
             }
-            System.out.println();
         }
     }
 
@@ -212,7 +195,7 @@ public class Solution {
 
         private int getCost(int source, int destination) {
             int edgeDistance = getEdge(source, destination);
-            int newDistance = distances[source] + edgeDistance;
+            int newDistance = distances[source] | edgeDistance;
             return newDistance;
         }
 
