@@ -8,7 +8,39 @@ import java.util.*;
 
 public class Solution {
 
-    public static final int ROOT = 1;
+    static long MOD = (long) (Math.pow(10, 9) + 7);
+
+    static long C(int n, int r) {
+        return (f[n] * ((inverseEuler(f[r]) * inverseEuler(f[n - r])) % MOD)) % MOD;
+    }
+
+    static long inverseEuler(long n) {
+        return pow(n, MOD - 2);
+    }
+
+    static long[] f = new long[1000005];
+
+    static {
+        f[0] = 1;
+        for (int i = 1; i <= 500000; i++)
+            f[i] = (f[i - 1] * i) % MOD;
+    }
+
+    static long pow(long a, long b) {
+        long x = 1, y = a;
+        while (b > 0) {
+            if (b % 2 == 1) {
+                x = (x * y);
+                if (x > MOD) x %= MOD;
+            }
+            y = (y * y);
+            if (y > MOD) y %= MOD;
+            b /= 2;
+        }
+        return x;
+    }
+
+
     private static boolean canPrint;
 
     static {
@@ -63,52 +95,48 @@ public class Solution {
     }
 
 
-    static class Tuple {
-        int first;
-        int second;
-        long value;
+    static class Tuple<T, R> {
+        T first;
+        T second;
+        R value;
 
         public Tuple() {
         }
 
-        public Tuple(int first, int second) {
+        public Tuple(T first, T second) {
             this.first = first;
             this.second = second;
         }
 
-        public Tuple(int first, int second, long value) {
-            this.first = first;
-            this.second = second;
+        public Tuple(T first, T second, R value) {
+            this(first, second);
             this.value = value;
         }
 
-        public int getFirst() {
+        public T getFirst() {
             return first;
         }
 
-        public int getSecond() {
+        public T getSecond() {
             return second;
         }
 
-        public void setFirst(int first) {
+        public void setFirst(T first) {
             this.first = first;
         }
 
-        public void setSecond(int second) {
+        public void setSecond(T second) {
             this.second = second;
         }
 
-        public void setValue(long value) {
+        public void setValue(R value) {
             this.value = value;
         }
 
-        public long getValue() {
+        public R getValue() {
             return value;
         }
 
-        public long size() {
-            return second - first;
-        }
 
         public String toString() {
             return String.format("(%d,%d) -> %d", first, second, value);
@@ -126,122 +154,86 @@ public class Solution {
         }
     }
 
+
+    static Map<Integer, Set<Integer>> tree = new HashMap<>();
+
     static int[] nodes;
 
-    static long[] subtreeCount;
-    static long[] redSubtreeCount;
+    static int[] countOfNodes;
 
-    static long[] subtreeSum;
+    static boolean[] visited(int n) {
+        return new boolean[n + 1];
+    }
 
-    static long[] sumFromAllNodes;
-
-    static Map<Integer, List<Tuple>> graph = new HashMap<Integer, List<Tuple>>();
-
-    static void add(int x, int y, long z) {
-        List<Tuple> childrenX = graph.get(x);
-        List<Tuple> childrenY = graph.get(y);
-        if (childrenX == null) {
-            childrenX = new ArrayList<>();
-            graph.put(x, childrenX);
+    static void add(Integer from, Integer to) {
+        Set<Integer> s = tree.get(from);
+        if (s == null) {
+            s = new HashSet<>();
+            tree.put(from, s);
         }
-        if (childrenY == null) {
-            childrenY = new ArrayList<>();
-            graph.put(y, childrenY);
+        s.add(to);
+        s = tree.get(to);
+        if (s == null)
+            s = new HashSet<>();
+        {
+            tree.put(to, s);
         }
-        childrenX.add(new Tuple(x, y, z));
-        childrenY.add(new Tuple(y, x, z));
+        s.add(from);
+
     }
-
-    static boolean isRed(int node) {
-        return nodes[node] == 0;
-    }
-
-    static void visited(int n) {
-        visited = new boolean[n + 1];
-    }
-
-    static int n;
-    static long redNodesCount;
-
-    static boolean[] visited;
 
     public static void main(String[] args) throws FileNotFoundException {
         Timer.createTimer();
-        n = in.nextInt();
-        subtreeCount = new long[n + 1];
-        redSubtreeCount = new long[n + 1];
-        subtreeSum = new long[n + 1];
-        sumFromAllNodes = new long[n + 1];
-        nodes = new int[n + 1];
-        // populate red/black
-        for (int i = 1; i <= n; i++) {
-            nodes[i] = in.nextInt();
-            redNodesCount += isRed(i) ? 1 : 0;
+        int n = in.nextInt();
+        int k = in.nextInt();
+        long[] numbers = new long[n];
+        List<Long> possibleCandidates = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            possibleCandidates.add(in.nextLong());
         }
-        // create the graph
-        for (int i = 0; i < n - 1; i++) {
-            add(in.nextInt(), in.nextInt(), in.nextLong());
-        }
-        visited(n);
-        // Fix node 1 as root, and find all the subtree sums
-        populateSubTreeSum(ROOT);
-        // Populate sumFromAllNodes from all (red) nodes to the current node
-        // Reset the visited the flags;
-        visited(n);
-        populateSumFromAllNodes(ROOT);
-        Printer.print("Graph - : " + graph);
-        Printer.print("subTreeCount : " + Arrays.toString(subtreeCount));
-        Printer.print("subTreeSum : " + Arrays.toString(subtreeSum));
-        Printer.print("sumOfAllNodes : " + Arrays.toString(sumFromAllNodes));
-        long sum = 0;
-        for (int i = 1; i <= n; i++) {
-            if (!isRed(i)) {
-                sum += sumFromAllNodes[i];
+        for (int j = 62; j >= 0; j--) {
+            List<Long> possibleCandidatesForThisSetBit = new ArrayList<>();
+            for (Long i : possibleCandidates) {
+                if ((1L << j & i) > 0) {
+                    possibleCandidatesForThisSetBit.add(i);
+                }
+            }
+//            Printer.printFormat("%d , %s\n",j, possibleCandidatesForThisSetBit);
+            if (possibleCandidatesForThisSetBit.size() >= k) {
+                possibleCandidates = possibleCandidatesForThisSetBit;
             }
         }
-        System.out.println(sum);
+
+
+        // Maximum possible number
+        long M = Long.MAX_VALUE;
+        for (Long i : possibleCandidates) {
+            M &= i;
+        }
+        System.out.println(M);
+        // Number of possible combinations
+        System.out.println(C(possibleCandidates.size(), k));
         Timer.elapsedTime();
-
     }
 
-    static void populateSubTreeSum(int node) {
-        visited[node] = true;
-        for (Tuple path : graph.get(node)) {
-            if (!visited[path.getSecond()]) {
-                populateSubTreeSum(path.getSecond());
-                // populate the subTreeCount
-                subtreeCount[node] += subtreeCount[path.getSecond()];
-                // current nodes subTreeSum = sumFromAllNodes of (a child nodes subtree sumFromAllNodes +
-                subtreeSum[node] += subtreeSum[path.getSecond()];
-                // number of red children of the child node * edge child -> node)
-                subtreeSum[node] += (path.getValue() * subtreeCount[path.getSecond()]);
+    static int[] countOfNumbersBySetBit(long[] numbers) {
+        int[] countOfNumbersBySetBit = new int[64];
+        int i = 0;
+        while (i < 63) {
+            for (int j = 0; j < numbers.length; j++) {
+//                Printer.printFormat("%d << %d & % d\n", 1L << i, i, numbers[j]);
+                if ((1L << i & numbers[j]) > 0) {
+                    countOfNumbersBySetBit[i]++;
+                }
             }
+            i++;
         }
-        if (isRed(node)) {
-            // Add the current node to the subtree
-            subtreeCount[node]++;
-        }
-
-    }
-
-    static void populateSumFromAllNodes(int node) {
-        visited[node] = true;
-        // If the current node is 1 , then it is root so we have it calculated already
-        if (node == ROOT) {
-            sumFromAllNodes[node] = subtreeSum[ROOT];
-        }
-        for (Tuple path : graph.get(node)) {
-            if (!visited[path.getSecond()]) {
-                sumFromAllNodes[path.getSecond()] = sumFromAllNodes[node]
-                        - subtreeCount[path.getSecond()] * path.getValue();
-                long countOfNodesFromParent = redNodesCount - subtreeCount[path.getSecond()];
-                sumFromAllNodes[path.getSecond()] += (countOfNodesFromParent * path.getValue());
-                populateSumFromAllNodes(path.getSecond());
-            }
-        }
+        return countOfNumbersBySetBit;
     }
 
 
 }
+
+
 
 
