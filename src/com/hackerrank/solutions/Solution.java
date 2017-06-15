@@ -3,7 +3,9 @@ package com.hackerrank.solutions;
 
 
 import java.io.FileNotFoundException;
+import java.text.ParseException;
 import java.util.*;
+import java.util.function.BiPredicate;
 
 
 public class Solution {
@@ -157,9 +159,6 @@ public class Solution {
 
     static Map<Integer, Set<Integer>> tree = new HashMap<>();
 
-    static int[] nodes;
-
-    static int[] countOfNodes;
 
     static boolean[] visited(int n) {
         return new boolean[n + 1];
@@ -182,53 +181,91 @@ public class Solution {
 
     }
 
-    public static void main(String[] args) throws FileNotFoundException {
+    static class MaxMinQueue<T extends Comparable<T>> {
+        Deque<T> items = new ArrayDeque<>(), minItems = new ArrayDeque<>(), maxItems = new ArrayDeque<>();
+
+
+        void enqeue(T item) {
+            items.addFirst(item);
+            removeItemsConditionallyAndAdd(item, (T a1, T a2) -> a1.compareTo(a2) < 0, minItems);
+            removeItemsConditionallyAndAdd(item, (T a1, T a2) -> a1.compareTo(a2) > 0, maxItems);
+        }
+
+
+        T min() {
+            return minItems.getLast();
+        }
+
+        T max() {
+            return maxItems.getLast();
+        }
+
+        T dequeue() {
+            removeConditionally(minItems, items);
+            removeConditionally(maxItems, items);
+            return items.removeLast();
+        }
+
+        boolean isEmpty() {
+            return items.isEmpty();
+        }
+
+        int size() {
+            return items.size();
+        }
+
+        public String toString() {
+            return String.format("Max-%d,Min-%d,Q:%s", max(), min(), items);
+        }
+
+        private static <T> void removeItemsConditionallyAndAdd(T item, BiPredicate<T, T> condition, Deque<T> auxilliaryItems) {
+            while (!auxilliaryItems.isEmpty() && condition.test(item, auxilliaryItems.getFirst())) {
+                auxilliaryItems.removeFirst();
+            }
+            auxilliaryItems.addFirst(item);
+
+        }
+
+        private static <T> void removeConditionally(Deque<T> auxilliaryItems, Deque<T> items) {
+            if (auxilliaryItems.getLast().equals(items.getLast())) {
+                auxilliaryItems.removeLast();
+            }
+        }
+    }
+
+
+    public static void main(String[] args) throws FileNotFoundException, ParseException {
         Timer.createTimer();
         int n = in.nextInt();
-        int k = in.nextInt();
-        long[] numbers = new long[n];
-        List<Long> possibleCandidates = new ArrayList<>();
+        int q = in.nextInt();
+        Integer[] input = new Integer[n];
+        MaxMinQueue<Integer> queue = new MaxMinQueue<>();
         for (int i = 0; i < n; i++) {
-            possibleCandidates.add(in.nextLong());
-        }
-        for (int j = 62; j >= 0; j--) {
-            List<Long> possibleCandidatesForThisSetBit = new ArrayList<>();
-            for (Long i : possibleCandidates) {
-                if ((1L << j & i) > 0) {
-                    possibleCandidatesForThisSetBit.add(i);
-                }
-            }
-//            Printer.printFormat("%d , %s\n",j, possibleCandidatesForThisSetBit);
-            if (possibleCandidatesForThisSetBit.size() >= k) {
-                possibleCandidates = possibleCandidatesForThisSetBit;
-            }
+            input[i] = in.nextInt();
         }
 
-
-        // Maximum possible number
-        long M = Long.MAX_VALUE;
-        for (Long i : possibleCandidates) {
-            M &= i;
+        for (int i = 0; i < q; i++) {
+            int low = in.nextInt();
+            int high = in.nextInt();
+            System.out.println(numberOfPairsLesser(high, input) - numberOfPairsLesser(low - 1, input));
         }
-        System.out.println(M);
-        // Number of possible combinations
-        System.out.println(C(possibleCandidates.size(), k));
+
         Timer.elapsedTime();
     }
 
-    static int[] countOfNumbersBySetBit(long[] numbers) {
-        int[] countOfNumbersBySetBit = new int[64];
-        int i = 0;
-        while (i < 63) {
-            for (int j = 0; j < numbers.length; j++) {
-//                Printer.printFormat("%d << %d & % d\n", 1L << i, i, numbers[j]);
-                if ((1L << i & numbers[j]) > 0) {
-                    countOfNumbersBySetBit[i]++;
-                }
+    static long numberOfPairsLesser(int high, Integer[] input) {
+        long result = 0;
+        MaxMinQueue<Integer> queue = new MaxMinQueue<>();
+        for (int i = 0; i < input.length; i++) {
+            queue.enqeue(input[i]);
+//            Printer.printFormat("Query - %d, %s\n", high, queue);
+            while (!queue.isEmpty() && (queue.max() - queue.min() > high)) {
+                queue.dequeue();
             }
-            i++;
+            result += queue.size();
         }
-        return countOfNumbersBySetBit;
+        return result;
+
     }
 
 
