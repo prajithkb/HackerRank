@@ -5,7 +5,7 @@ package com.hackerrank.solutions;
 import java.io.FileNotFoundException;
 import java.text.ParseException;
 import java.util.*;
-import java.util.function.BiPredicate;
+import java.util.function.BiConsumer;
 
 
 public class Solution {
@@ -181,90 +181,209 @@ public class Solution {
 
     }
 
-    static class MaxMinQueue<T extends Comparable<T>> {
-        Deque<T> items = new ArrayDeque<>(), minItems = new ArrayDeque<>(), maxItems = new ArrayDeque<>();
-
-
-        void enqeue(T item) {
-            items.addFirst(item);
-            removeItemsConditionallyAndAdd(item, (T a1, T a2) -> a1.compareTo(a2) < 0, minItems);
-            removeItemsConditionallyAndAdd(item, (T a1, T a2) -> a1.compareTo(a2) > 0, maxItems);
-        }
-
-
-        T min() {
-            return minItems.getLast();
-        }
-
-        T max() {
-            return maxItems.getLast();
-        }
-
-        T dequeue() {
-            removeConditionally(minItems, items);
-            removeConditionally(maxItems, items);
-            return items.removeLast();
-        }
-
-        boolean isEmpty() {
-            return items.isEmpty();
-        }
-
-        int size() {
-            return items.size();
-        }
-
-        public String toString() {
-            return String.format("Max-%d,Min-%d,Q:%s", max(), min(), items);
-        }
-
-        private static <T> void removeItemsConditionallyAndAdd(T item, BiPredicate<T, T> condition, Deque<T> auxilliaryItems) {
-            while (!auxilliaryItems.isEmpty() && condition.test(item, auxilliaryItems.getFirst())) {
-                auxilliaryItems.removeFirst();
-            }
-            auxilliaryItems.addFirst(item);
-
-        }
-
-        private static <T> void removeConditionally(Deque<T> auxilliaryItems, Deque<T> items) {
-            if (auxilliaryItems.getLast().equals(items.getLast())) {
-                auxilliaryItems.removeLast();
-            }
-        }
-    }
-
 
     public static void main(String[] args) throws FileNotFoundException, ParseException {
         Timer.createTimer();
-        int n = in.nextInt();
-        int q = in.nextInt();
-        Integer[] input = new Integer[n];
-        MaxMinQueue<Integer> queue = new MaxMinQueue<>();
-        for (int i = 0; i < n; i++) {
-            input[i] = in.nextInt();
+        int r, c, n;
+        r = in.nextInt();
+        c = in.nextInt();
+        n = in.nextInt();
+        char[][] grid = new char[r][c];
+        for (int i = 0; i < r; i++) {
+            grid[i] = in.next().toCharArray();
         }
-
-        for (int i = 0; i < q; i++) {
-            int low = in.nextInt();
-            int high = in.nextInt();
-            System.out.println(numberOfPairsLesser(high, input) - numberOfPairsLesser(low - 1, input));
-        }
-
+//        Grid g = new Grid(grid, r, c);
+        Grid h = new Grid(grid, r, c);
+//        BomberMan bomberMan = new BomberMan(g);
+        BomberMan optimizedBomberMan = new OptimizedBomberMan(h);
+//        bomberMan.tick(n);
+        optimizedBomberMan.tick(n);
+//            System.out.print("After " + i + " seconds ");
+//        System.out.println(g.state().equals(h.state()));
+        System.out.println(h.state());
         Timer.elapsedTime();
     }
 
-    static long numberOfPairsLesser(int high, Integer[] input) {
-        long result = 0;
-        MaxMinQueue<Integer> queue = new MaxMinQueue<>();
-        for (int i = 0; i < input.length; i++) {
-            queue.enqeue(input[i]);
-//            Printer.printFormat("Query - %d, %s\n", high, queue);
-            while (!queue.isEmpty() && (queue.max() - queue.min() > high)) {
-                queue.dequeue();
-            }
-            result += queue.size();
+    static class BomberMan {
+        enum State {
+            START,
+            PLANTING,
+            OBSERVE;
         }
-        return result;
+
+        BomberMan(Grid grid) {
+            this.grid = grid;
+        }
+
+        State state = State.START;
+
+        Grid grid;
+
+        void tick(int n) {
+            for (int i = 0; i < n; i++) {
+                changeState();
+                grid.tick();
+                if (state == State.PLANTING) {
+                    grid.plant();
+                }
+            }
+        }
+
+        public String toString() {
+            return String.format("%s \n%s", state, grid);
+        }
+
+        void changeState() {
+            if (state == State.START || state == State.PLANTING) {
+                state = State.OBSERVE;
+            } else {
+                state = State.PLANTING;
+            }
+        }
+    }
+
+
+    static class OptimizedBomberMan extends BomberMan {
+
+        OptimizedBomberMan(Grid grid) {
+            super(grid);
+        }
+
+        void tick(int times) {
+            if(times <=5){
+                super.tick(times);
+                return;
+            }
+            if(times % 2 == 0){
+                super.tick(2);
+                return;
+            }
+            if ((times - 3) % 4 == 0) {
+                for (int i = 0; i < 3; i++) {
+                    super.tick(1);
+                }
+            } else {
+                for (int i = 0; i < 5; i++) {
+                    super.tick(1);
+                }
+            }
+        }
+    }
+
+    static class Grid {
+        final int r, c;
+        final char[][] grid;
+        final int[][] timeRemaining;
+        static int START_TIME = 3;
+
+        Grid(char[][] grid, int r, int c) {
+            this.r = r;
+            this.c = c;
+            this.grid = grid;
+            timeRemaining = new int[r][c];
+            resetTime();
+        }
+
+
+        static final char BOMB = 'O';
+        static final char EMPTY = '.';
+        // temporary state to mark it as it will explode
+        // BOMB -> EXPLODE -> EMPTY;
+        static final char EXPLODE = 'X';
+
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < r; i++) {
+                sb.append(String.valueOf(grid[i]));
+                sb.append("\n");
+            }
+            for (int i = 0; i < r; i++) {
+                sb.append(Arrays.toString(timeRemaining[i]));
+                sb.append("\n");
+            }
+            return sb.toString();
+        }
+
+        void tick() {
+            markCellsToExplode();
+            explode();
+        }
+
+        private void markCellsToExplode() {
+            loop((Integer i, Integer j) -> {
+                if (timeRemaining[i][j] != 0) {
+                    timeRemaining[i][j]--;
+                    if (timeRemaining[i][j] == 0) {
+                        markCellToExplode(i, j);
+                    }
+                }
+            });
+        }
+
+        void plant() {
+            loop((Integer i, Integer j) -> {
+                if (grid[i][j] == EMPTY) {
+                    grid[i][j] = BOMB;
+                }
+            });
+            resetTime();
+        }
+
+        void loop(BiConsumer<Integer, Integer> biConsumer) {
+            for (int i = 0; i < r; i++) {
+                for (int j = 0; j < c; j++) {
+                    biConsumer.accept(i, j);
+                }
+            }
+        }
+
+        void resetTime() {
+            loop((Integer i, Integer j) -> {
+                if (grid[i][j] == BOMB && timeRemaining[i][j] == 0) {
+                    timeRemaining[i][j] = START_TIME;
+                }
+            });
+        }
+
+
+        String state() {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < r; i++) {
+                sb.append(String.valueOf(grid[i]));
+                sb.append("\n");
+            }
+            return sb.toString();
+        }
+
+        void markCellToExplode(int i, int j) {
+            markToExplode(i, j);
+            if (i > 0) {
+                markToExplode(i - 1, j);
+            }
+            if (j > 0) {
+                markToExplode(i, j - 1);
+            }
+            if (i < r - 1) {
+                markToExplode(i + 1, j);
+            }
+            if (j < c - 1) {
+                markToExplode(i, j + 1);
+            }
+        }
+
+        void explode() {
+            loop((Integer i, Integer j) -> {
+                if (grid[i][j] == EXPLODE) {
+                    timeRemaining[i][j] = 0;
+                    grid[i][j] = EMPTY;
+                }
+            });
+        }
+
+        void markToExplode(int i, int j) {
+            grid[i][j] = EXPLODE;
+        }
+
 
     }
 
