@@ -56,23 +56,24 @@ public class DefaultBoard implements Board {
         for (int i = 0; i < BoardModule.NUMBER_OF_COLUMNS; i++) {
             for (int j = 0; j < BoardModule.NUMBER_OF_ROWS; j++) {
                 char value = ' ';
-                if(i < columns.size()){
+                if (i < columns.size()) {
                     val col = columns.get(i);
-                    if( j < col.getSize()){
+                    if (j < col.getSize()) {
                         val coins = col.getCoins();
                         value = coins.get(j).getValueAsString();
                     }
                 }
                 values[BoardModule.NUMBER_OF_ROWS - j - 1][i] = value;
             }
-        } return values;
+        }
+        return values;
     }
 
     @Override
     public Coin getCoinAt(int row, int col) {
-        if( col < columns.size()){
+        if (col < columns.size()) {
             val coins = columns.get(col).getCoins();
-            if (row < coins.size()){
+            if (row < coins.size()) {
                 return coins.get(row);
             }
         }

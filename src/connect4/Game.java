@@ -22,7 +22,7 @@ public interface Game {
     @FunctionalInterface
     interface EventListener {
 
-        void onMoveComplete(GameStatus currentStatus, Player nextPlayer, Optional<Player> winner);
+        void onMoveComplete(GameStatus currentStatus, Player currentPlayer, Optional<Player> winner);
 
     }
 

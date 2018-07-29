@@ -19,6 +19,7 @@ public class DefaultPlayer implements Player {
     private final String name;
 
     private final CoinTypes type;
+
     private final Strategy strategy;
 
     private CoinFactory coinFactory;
@@ -29,6 +30,7 @@ public class DefaultPlayer implements Player {
         this.type = type;
         this.coinFactory = coinFactory;
         this.strategy = strategy;
+        log.info("Created player {}, with coinType - {}, with strategy - {}", name, type, strategy);
     }
 
     @Override
@@ -50,7 +52,7 @@ public class DefaultPlayer implements Player {
             log.error("Unable to make a move, board is full, indexToInsert: {}", indexToInsert);
         }
         try {
-            log.info("{} Moving coin to {}", name, indexToInsert);
+            log.info("{} Moving coin to column - {}", name, indexToInsert);
             board.insertAtColumn(indexToInsert, coin);
         } catch (IllegalColumnIndexException | ColumnFullException e) {
             log.error("Unable to make a move {}", e);

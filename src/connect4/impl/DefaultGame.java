@@ -1,6 +1,7 @@
 package connect4.impl;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -49,13 +50,14 @@ public class DefaultGame implements Game {
                 result = statusChecker.check(this);
                 status = result.getStatus();
             } catch (InvalidMoveException e) {
+                result = StatusCheckerResult.builder().status(GameStatus.ERROR).build();
                 status = GameStatus.ERROR;
             }
             log.info("Game status - {}", status);
-            fireMoveComplete(status);
+            fireMoveComplete(status, nextPlayer, result.getWinner());
             switch (status) {
                 case WIN:
-                    log.info("{} won!", result.getWinner().get());
+                    log.info("{} won!", result.getWinner().get().name());
                     return;
                 case DRAW:
                     log.info("Its a draw!");
@@ -110,10 +112,9 @@ public class DefaultGame implements Game {
         return status;
     }
 
-
-    private void fireMoveComplete(GameStatus status) {
+    private void fireMoveComplete(GameStatus status, Player currentPlayer, Optional<Player> winner) {
         for (EventListener listener : listeners) {
-            listener.onMoveComplete(status);
+            listener.onMoveComplete(status, currentPlayer, winner);
         }
     }
 }

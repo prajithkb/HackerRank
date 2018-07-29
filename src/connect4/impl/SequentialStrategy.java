@@ -6,7 +6,7 @@ import connect4.Board;
 import connect4.Column;
 import connect4.Strategy;
 
-public class SimpleStrategy implements Strategy {
+public class SequentialStrategy implements Strategy {
 
     @Override
     public int pickNextColumn(Board board) {
@@ -17,6 +17,5 @@ public class SimpleStrategy implements Strategy {
             }
         }
         return -1;
-
     }
 }

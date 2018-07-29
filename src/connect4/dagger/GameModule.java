@@ -1,5 +1,6 @@
 package connect4.dagger;
 
+import java.util.List;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -19,14 +20,13 @@ public class GameModule {
 
     @Provides
     @Singleton
-    Game providesGame(@Named("player1") Player player1, @Named("player2") Player player2, Board board, StatusChecker statusChecker) {
-        val players = ImmutableList.of(player1, player2);
+    Game providesGame(List<Player> players, Board board, StatusChecker statusChecker) {
         return new DefaultGame(players, board, statusChecker);
     }
 
     @Provides
     @Singleton
-    StatusChecker providesStatusChecker() {
-        return new DefaultStatusChecker();
+    StatusChecker providesStatusChecker(List<Player> players) {
+        return new DefaultStatusChecker(players);
     }
 }
