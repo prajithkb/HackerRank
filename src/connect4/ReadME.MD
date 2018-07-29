@@ -26,5 +26,4 @@ Thanks to the following Libraries
 <orderEntry type="library" name="com.googlecode.lanterna:lanterna:3.0.1" level="project" />
 <orderEntry type="library" name="com.google.dagger:dagger:2.11" level="project" />
 <orderEntry type="library" scope="PROVIDED" name="com.google.dagger:dagger-compiler:2.11" level="project" />
-
 ```
