@@ -1,7 +1,9 @@
 package com.hackerrank.graphs;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by kprajith on 4/8/2017.
@@ -10,8 +12,9 @@ public class Node<T> {
 
     public  T value;
     public int id;
-    public T sum;
-    public List<Node> children = new ArrayList<>();
+
+
+    public Set<Node> children = new HashSet<>();
 
     public static Node NULL;
 
