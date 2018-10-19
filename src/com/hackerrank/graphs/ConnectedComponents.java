@@ -18,6 +18,44 @@ import lombok.ToString;
 @ToString
 public class ConnectedComponents {
 
+
+    @Builder.Default private Map<Integer, Node> nodesMap = new HashMap<>();
+
+    public void connect(int from, int to) {
+        node(from).connectWith(node(to));
+        node(to).connectWith(node(from));
+    }
+    private Node node(int id) {
+        nodesMap.putIfAbsent(id, Node
+                .builder()
+                .value(id)
+                .build());
+        return nodesMap.get(id);
+    }
+    public List<Set<Node>> getConnectedNodes() {
+        Map<Integer, Boolean> visited = new HashMap<>();
+        return nodesMap
+                .entrySet()
+                .stream()
+                .filter(e -> isNotVisited(e.getValue(), visited))
+                .map(e -> createConnectedNodes(e.getValue(), visited))
+                .collect(Collectors.toList());
+
+    }
+
+    private static Set<Node> createConnectedNodes(Node node, Map<Integer, Boolean> visited) {
+        Set<Node> connections = new HashSet<>();
+        node.visit(n -> {
+            visited.put(n.getValue(), true);
+            connections.add(n);
+        }, n -> isNotVisited(n, visited));
+        return connections;
+    }
+
+    private static boolean isNotVisited(Node node, Map<Integer, Boolean> visited){
+        return !visited.getOrDefault(node.getValue(),false);
+    }
+
     @Builder
     @Getter
     public static class Node {
@@ -25,10 +63,9 @@ public class ConnectedComponents {
         private final int value;
 
         @Builder.Default
-        @ToString.Exclude
         private Set<Node> neighbours = new HashSet<>();
 
-        public void connect(Node node) {
+        public void connectWith(Node node) {
             neighbours.add(node);
         }
 
@@ -48,61 +85,5 @@ public class ConnectedComponents {
         }
     }
 
-    @Builder.Default private Map<Integer, Node> nodesMap = new HashMap<>();
-
-    public void connect(int from, int to) {
-        node(from).connect(node(to));
-        node(to).connect(node(from));
-    }
-
-    public Node node(int id) {
-        nodesMap.putIfAbsent(id, Node
-                .builder()
-                .value(id)
-                .build());
-        return nodesMap.get(id);
-    }
-
-    public List<Set<Node>> getConnectedComponentsSizes() {
-        Map<Integer, Boolean> visited = new HashMap<>();
-        return nodesMap
-                .entrySet()
-                .stream()
-                .filter(e -> isNotVisited(e.getValue(), visited))
-                .map(e -> createConnections(e.getValue(), visited))
-                .collect(Collectors.toList());
-
-    }
-
-    public static Set<Node> createConnections(Node node,  Map<Integer, Boolean> visited) {
-        Set<Node> connections = new HashSet<>();
-        node.visit(n -> {
-            visited.put(n.getValue(), true);
-            connections.add(n);
-        }, n -> isNotVisited(n, visited));
-        return connections;
-    }
-
-    static boolean isNotVisited(Node node, Map<Integer, Boolean> visited){
-        return !visited.getOrDefault(node.getValue(),false);
-    }
-
-    static int visit(Node node, Map<Integer, Boolean> visited) {
-        if (visited.getOrDefault(node.getValue(), false)) {
-            return 0;
-        }
-        visited.put(node.getValue(), true);
-        if (node.hasNeighbours()) {
-            return node
-                    .getNeighbours()
-                    .stream()
-                    .filter(n -> !visited.getOrDefault(node.getValue(), false))
-                    .mapToInt(n -> visit(node, visited))
-                    .sum();
-        } else{
-            return 1;
-        }
-
-    }
 
 }
