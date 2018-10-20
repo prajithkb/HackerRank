@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.Builder;
@@ -73,10 +74,10 @@ public class ConnectedComponents {
             return !neighbours.isEmpty();
         }
 
-        public void visit(Consumer<Node> visitor, Function<Node,Boolean> condition){
-            if(condition.apply(this)){
+        public void visit(Consumer<Node> visitor, Predicate<Node> shouldVisit){
+            if(shouldVisit.test(this)){
                 visitor.accept(this);
-                neighbours.forEach(n -> n.visit(visitor, condition));
+                neighbours.forEach(n -> n.visit(visitor, shouldVisit));
             }
         }
 
