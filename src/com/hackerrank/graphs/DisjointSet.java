@@ -10,44 +10,59 @@ import java.util.stream.Collectors;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 public class DisjointSet<Item> {
 
     public DisjointSet(int size){
-        parents = new Element[size+1];
+        elements = new Element[size+1];
+        parentIndexes = new Integer[size +1];
     }
 
-    private final Element[] parents;
+    private final Element[] elements;
+    private final Integer[] parentIndexes;
 
     @Builder
     @Getter
+    @Setter
     @ToString
     public static class Element<Item> {
 
         private Item value;
 
         private int index;
+
+        private int size;
     }
 
     public void union(Element<Item> from, Element<Item> to) {
-        parents[findOrCreate(from).getIndex()] =  findOrCreate(to);
+        final Integer toIndex = findParentIndexOrCreate(to);
+        final Integer fromIndex = findParentIndexOrCreate(from);
+        parentIndexes[fromIndex] = toIndex;
+        elements[toIndex].setSize(elements[toIndex].getSize() + elements[fromIndex].getSize());
     }
 
-    private Element<Item> findOrCreate(Element<Item> item){
-        Optional<Element<Item>> itemRep = find(item);
+    public int sizeOfConnectedComponents(Element<Item> from){
+        return find(from.getIndex())
+                .map(i -> elements[i].getSize())
+                .orElse(from.getSize());
+    }
+
+    private Integer findParentIndexOrCreate(Element<Item> item){
+        Optional<Integer> itemRep = find(item.getIndex());
         if (!itemRep.isPresent()){
-            parents[item.getIndex()] = item;
+            parentIndexes[item.getIndex()] = item.getIndex();
+            elements[item.getIndex()] = item;
         }
-        return itemRep.orElse(item);
+        return itemRep.orElse(item.getIndex());
     }
 
     public List<Set<Integer>> getConnectedComponents(){
         final Map<Integer, Set<Integer>> connectedComponents = new HashMap<>();
-        for (int i = 1; i < parents.length; i++) {
+        for (int i = 1; i < elements.length; i++) {
             final int currentIndex = i;
             find(currentIndex)
-                    .map(Element::getIndex)
                     .ifPresent(index -> {
                         final Set<Integer> parts = connectedComponents.getOrDefault(index, new HashSet<>());
                         parts.add(currentIndex);
@@ -65,21 +80,16 @@ public class DisjointSet<Item> {
         return getConnectedComponents().toString();
     }
 
-    public Optional<Element<Item>> find(Integer index) {
-       return index < parents.length ? find(parents[index]) : Optional.empty();
-    }
-
-    public Optional<Element<Item>> find(final Element<Item> element) {
-        if(element == null || parents.length <= element.getIndex() || parents[element.getIndex()] == null){
+    public Optional<Integer> find(final Integer index) {
+        if(index == null || parentIndexes.length <= index || parentIndexes[index] == null){
             return Optional.empty();
         }
-        if (parents[element.getIndex()]
-                .equals(element)) {
-            return Optional.of(element);
+        if (parentIndexes[index] == index) {
+            return Optional.of(index);
         } else {
-            Optional<Element<Item>> result = find(parents[element.getIndex()]);
+            Optional<Integer> result = find(parentIndexes[index]);
             result.ifPresent(r ->  {
-                parents[element.getIndex()] = r;
+                parentIndexes[index] = r;
             });
             return result;
         }
@@ -89,6 +99,7 @@ public class DisjointSet<Item> {
         return Element.<Item>builder()
                 .value(item)
                 .index(index)
+                .size(1)
                 .build();
     }
 }
