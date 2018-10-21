@@ -1,5 +1,6 @@
 package com.hackerrank.graphs;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -60,15 +61,18 @@ public class DisjointSet<Item> {
 
     public List<Set<Integer>> getConnectedComponents(){
         final Map<Integer, Set<Integer>> connectedComponents = new HashMap<>();
-        for (int i = 1; i < elements.length; i++) {
-            final int currentIndex = i;
-            find(currentIndex)
-                    .ifPresent(index -> {
-                        final Set<Integer> parts = connectedComponents.getOrDefault(index, new HashSet<>());
-                        parts.add(currentIndex);
-                        connectedComponents.put(index, parts);
-                    });
-        }
+        Arrays
+                .stream(elements)
+                .filter(e -> e != null)
+                .collect(Collectors.toMap(e -> e.getIndex(), e -> find(e.getIndex())))
+                .entrySet()
+                .stream()
+                .filter(e -> e.getValue().isPresent())
+                .forEach(e -> {
+                    final Set<Integer> parts = connectedComponents.getOrDefault(e.getValue().get(), new HashSet<>());
+                    parts.add(e.getKey());
+                    connectedComponents.put(e.getValue().get(), parts);
+                });
         return connectedComponents
                 .entrySet()
                 .stream()
