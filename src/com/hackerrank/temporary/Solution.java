@@ -1,42 +1,29 @@
 package com.hackerrank.temporary;
 
+import static com.hackerrank.math.Binomial.nCrModPFermat;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.Arrays;
 import java.util.Scanner;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import com.hackerrank.graphs.ConnectedComponents;
+import com.hackerrank.graphs.DisjointSet;
+import lombok.Builder;
+import lombok.Getter;
 
 public class Solution {
 
-
-
-    static int[] componentsInGraph(int[][] gb) {
-        ConnectedComponents connectedComponents = ConnectedComponents
-                .builder()
-                .build();
-        for (int i = 0; i < gb.length; i++) {
-            connectedComponents.connect(gb[i][0], gb[i][1]);
-        }
-        final List<Set<ConnectedComponents.Node>> connectedNodes = connectedComponents.getConnectedNodes();
-        final List<Integer> sizes = connectedNodes
-                .stream()
-                .mapToInt(cc -> cc.size())
-                .boxed()
-                .sorted()
-                .collect(Collectors.toList());
-        return new int[] { sizes.get(0), sizes.get(sizes.size()-1) };
-
+    @Builder
+    @Getter
+    static class Row {
+        int from, to;
+        char color;
     }
+
+    private static final Character BLACK = 'b';
+    private static long MOD = 1000000007;
 
     static OutputStreamWriter outputStreamWriter;
 
@@ -59,32 +46,58 @@ public class Solution {
                                          .nextLine()
                                          .trim());
 
-        int[][] gb = new int[n][2];
+        Row[] gb = new Row[n-1];
 
-        for (int gbRowItr = 0; gbRowItr < n; gbRowItr++) {
+        for (int gbRowItr = 0; gbRowItr < n-1; gbRowItr++) {
             String[] gbRowItems = scanner
                     .nextLine()
                     .split(" ");
 
-            for (int gbColumnItr = 0; gbColumnItr < 2; gbColumnItr++) {
-                int gbItem = Integer.parseInt(gbRowItems[gbColumnItr].trim());
-                gb[gbRowItr][gbColumnItr] = gbItem;
-            }
+            gb[gbRowItr] = Row
+                    .builder()
+                    .from(Integer.parseInt(gbRowItems[0]))
+                    .to(Integer.parseInt(gbRowItems[1]))
+                    .color(gbRowItems[2].charAt(0))
+                    .build();
         }
-
-        int[] result = componentsInGraph(gb);
-
-        for (int SPACEItr = 0; SPACEItr < result.length; SPACEItr++) {
-            bufferedWriter.write(String.valueOf(result[SPACEItr]));
-
-            if (SPACEItr != result.length - 1) {
-                bufferedWriter.write(" ");
-            }
-        }
-
+        componentsInGraph(gb, n);
         bufferedWriter.newLine();
-
         bufferedWriter.close();
     }
+
+    private static void componentsInGraph(final Row[] gb, final int n) {
+        DisjointSet<Integer> disjointSet = new DisjointSet<>(n);
+        Arrays.stream(gb).forEach(r -> {
+                if(r.getColor() == BLACK){
+                disjointSet.union(DisjointSet.createElement(r.getFrom(), r.getFrom()),
+                                  DisjointSet.createElement(r.getTo(), r.getTo()));
+            }
+        });
+        //System.out.println(disjointSet);
+        long totalImPossibleOnes = disjointSet.getConnectedComponents()
+                   .stream()
+                   .mapToInt(c -> c.size())
+                   .mapToLong(s -> ((NC2(s)) * (n-s))  + NC3(s))
+                   .sum();
+
+        final long total = NC3(n);
+        System.out.println(total);
+        System.out.println(totalImPossibleOnes);
+        System.out.println(total - totalImPossibleOnes);
+        System.out.println((total - totalImPossibleOnes) % MOD);
+    }
+
+    private static long NC3(long N){
+        return ((N % MOD) * ((N-1) % MOD) * ((N-2) % MOD))/6;
+    }
+
+    private static long NC2(long N){
+        return ((N % MOD) * ((N-1) % MOD) )/2;
+    }
+
+
+
+
+
 }
 

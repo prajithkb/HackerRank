@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -33,6 +32,7 @@ public class ConnectedComponents {
                 .build());
         return nodesMap.get(id);
     }
+
     public List<Set<Node>> getConnectedNodes() {
         Map<Integer, Boolean> visited = new HashMap<>();
         return nodesMap

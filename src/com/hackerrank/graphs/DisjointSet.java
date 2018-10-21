@@ -1,6 +1,5 @@
 package com.hackerrank.graphs;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -70,7 +69,7 @@ public class DisjointSet<Item> {
        return index < parents.length ? find(parents[index]) : Optional.empty();
     }
 
-    public Optional<Element<Item>> find(Element<Item> element) {
+    public Optional<Element<Item>> find(final Element<Item> element) {
         if(element == null || parents.length <= element.getIndex() || parents[element.getIndex()] == null){
             return Optional.empty();
         }
@@ -79,12 +78,14 @@ public class DisjointSet<Item> {
             return Optional.of(element);
         } else {
             Optional<Element<Item>> result = find(parents[element.getIndex()]);
-            parents[element.getIndex()] =  result.get();
+            result.ifPresent(r ->  {
+                parents[element.getIndex()] = r;
+            });
             return result;
         }
     }
 
-    public static <Item> Element<Item> toElement(Item item, int index) {
+    public static <Item> Element<Item> createElement(Item item, int index) {
         return Element.<Item>builder()
                 .value(item)
                 .index(index)
